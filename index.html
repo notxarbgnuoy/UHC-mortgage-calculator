@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=400, initial-scale=1.0">
+  <title>Utah Housing Mortgage Payment Calculator</title>
+  <style>
+    :root {
+      --purple: #881eff;
+      --purple-dark: #6c18cc;
+      --blue: #1cb3ff;
+      --green: #00ce4b;
+      --green-dark: #00b203;
+      --white: #ffffff;
+      --gray: #888;
+      --backgroundcalc: #f4f6f9;
+      --red: #ec6884 ;
+      --font: 'Poppins', sans-serif;
+    }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: #f4f6f9;
+      color: #333;
+      overflow-x: hidden;
+    }
+    .mortgage-calculator-wrapper {
+      padding: 1rem;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+    }
+    .calculator {
+      display: flex;
+      flex-wrap: wrap;
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+      width: 100%;
+      min-width: 0;
+    }
+    .inputs, .chart {
+      flex: 1 1 400px;
+      padding: 2rem 2.5rem 2rem 2.5rem;
+      box-sizing: border-box;
+    }
+    .inputs {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 0;
+    }
+    .toggle-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1.6rem;
+      margin-top: -0.3rem;
+      width: 100%;
+    }
+    .segmented-toggle {
+      display: flex;
+      background: #e9ecf3;
+      border-radius: 10px;
+      padding: 4px 6px;
+      gap: 2px;
+      box-sizing: border-box;
+      min-width: 260px;
+      max-width: 340px;
+      width: auto;
+      box-shadow: 0 0 0.5px #bbb;
+    }
+    .segmented-btn {
+      border: none;
+      background: none;
+      padding: 6px 18px;
+      font-size: 1.08em;
+      font-family: inherit;
+      font-weight: 500;
+      color: #1a2333;
+      border-radius: 7px;
+      cursor: pointer;
+      outline: none;
+      transition: background .15s, box-shadow .15s, color .15s;
+      margin: 0 1px;
+      box-shadow: none;
+      position: relative;
+      z-index: 1;
+    }
+    .segmented-btn.active {
+      background: #fff;
+      color: #1a2333;
+      font-weight: 600;
+      box-shadow: 0 1.5px 6px rgba(80,90,120,0.06);
+      z-index: 2;
+    }
+    .inputs > .editable-group,
+    .inputs > .pmi-dual-group,
+    .inputs > .inline-input {
+      margin-top: 1.1rem;
+    }
+    .inputs > .editable-group:first-child,
+    .inputs > .pmi-dual-group:first-child,
+    .inputs > .inline-input:first-child {
+      margin-top: 0;
+    }
+    .inputs input[type=range] {
+      margin-bottom: 0.2rem;
+      margin-top: 0.5rem;
+      accent-color: var(--purple);
+      height: 30px;
+    }
+    .editable-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .editable-group label {
+      margin: 0;
+    }
+    .editable-group input[type=text] {
+      width: 95px;
+      font-size: 1rem;
+      padding: 0.34rem 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid #ccc;
+    }
+    .editable-group span {
+      font-weight: normal;
+    }
+    .pmi-dual-group {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .pmi-dual-group label {
+      min-width: 46px;
+      font-weight: bold;
+    }
+    .pmi-dual-group .pmi-col {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .pmi-dual-group input[type=text] {
+      width: 70px;
+      font-size: 1rem;
+      padding: 0.34rem 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid #ccc;
+      margin-left: 0.1rem;
+    }
+    .pmi-slash {
+      font-weight: normal;
+      color: var(--gray);
+      margin: 0 0.5rem;
+    }
+    .inline-input {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+    }
+    .inline-input label {
+      flex: 1;
+      margin-right: 0.5rem;
+    }
+    .inline-input input[type=number], .inline-input input[type=text] {
+      flex: 0 0 120px;
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .chart {
+      background: var(--backgroundcalc);
+      border-left: 2px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 2.5rem 2.5rem 2.5rem;
+      position: relative;
+      box-sizing: border-box;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+    }
+    #chart-title {
+      font-size: 1.6rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--purple-dark);
+      text-align: center;
+      width: 100%;
+      display: block;
+    }
+    #total-payment {
+      font-size: 2.0rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      width: 100%;
+      display: block;
+      color: var(--green-dark);
+    }
+    svg {
+      max-width: 100%;
+      height: auto;
+      transform: rotate(-90deg);
+      display: block;
+      margin: 0 auto;
+    }
+    .pie-slice-hover {
+      transform: scale(1.06);
+      filter: drop-shadow(0 0 7px rgba(0,0,0,0.08));
+      transition: transform 0.23s cubic-bezier(.4,0,.2,1), filter 0.23s cubic-bezier(.4,0,.2,1);
+      transform-origin: 50% 50%;
+    }
+    .breakdown {
+      margin-top: 0.7rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .output {
+      color: var(--gray);
+      font-size: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 250px;
+      min-width: 180px;
+      max-width: 100%;
+      gap: 0.1rem;
+      justify-content: center;
+      text-align: center;
+    }
+    .output div {
+      margin: 0.09rem 0;
+      font-weight: 500;
+      font-size: 1.03rem;
+      letter-spacing: 0.01em;
+      text-align: center;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .output .important {
+      color: var(--purple-dark);
+      font-size: 1.06rem;
+      font-weight: bold;
+    }
+    .tooltip {
+      position: absolute;
+      background: #fff;
+      color: #000;
+      padding: 0.5rem 0.8rem;
+      border-radius: 0.4rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      font-size: 0.95rem;
+      pointer-events: none;
+      z-index: 10;
+      display: none;
+      white-space: nowrap;
+    }
+    @media (max-width: 1000px) {
+      .inputs, .chart {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      .output {
+        min-width: 0;
+        width: 100%;
+        max-width: 350px;
+      }
+    }
+    @media (max-width: 768px) {
+      .chart {
+        order: -1;
+        border-left: none;
+        border-bottom: 2px solid #ddd;
+        padding: 1.2rem 1rem 2rem 1rem !important;
+        width: 100vw;
+        min-width: 0;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .inputs, .chart {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+      }
+      .breakdown {
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .output {
+        min-width: 0;
+        width: 100%;
+        max-width: 350px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+    }
+    @media (max-width: 600px) {
+      .inputs, .chart {
+        padding: 1rem !important;
+      }
+      .chart {
+        width: 100vw;
+        min-width: 0;
+      }
+      #chart-title,
+      #total-payment {
+        text-align: center;
+        width: 100%;
+        display: block;
+      }
+      .breakdown {
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .output {
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+    }
+    @media (max-width: 480px) {
+      .output {
+        max-width: 98vw;
+        width: 98vw;
+      }
+      .output div {
+        font-size: 0.98rem;
+      }
+      .chart {
+        width: 100vw;
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mortgage-calculator-wrapper">
+    <div class="calculator">
+      <div class="inputs">
+        <div class="toggle-bar">
+          <div class="segmented-toggle">
+            <button type="button" id="fha-toggle" class="segmented-btn active">FHA</button>
+            <button type="button" id="conv-toggle" class="segmented-btn">Conventional</button>
+          </div>
+        </div>
+        <div class="editable-group">
+          <label for="purchase-price-text">Purchase Price: $</label>
+          <input type="text" id="purchase-price-text" value="450,000">
+        </div>
+        <input type="range" id="purchase-price" min="100000" max="750000" step="5000" value="450000">
+
+        <!-- PMI dual group, only visible in conventional mode -->
+        <div class="pmi-dual-group" id="pmi-controls" style="display:none;">
+          <label>PMI:</label>
+          <div class="pmi-col">
+            <input type="text" id="pmi-amt-text" value="0">
+            <span>$ / mo</span>
+          </div>
+          <span class="pmi-slash">or</span>
+          <div class="pmi-col">
+            <input type="text" id="pmi-rate-text" value="0.44">
+            <span>% / yr</span>
+          </div>
+        </div>
+        <input type="range" id="pmi" min="0.2" max="1.5" step="0.01" value="0.44" style="display:none;">
+
+        <div class="editable-group">
+          <label for="interest-rate-text">Interest Rate:</label>
+          <input type="text" id="interest-rate-text" value="6.5" size="4" style="width:3.7em;"> <span>%</span>
+        </div>
+        <input type="range" id="interest-rate" min="3" max="8" step="0.125" value="6.5">
+
+        <div class="inline-input">
+          <label for="taxes">Annual Taxes ($):</label>
+          <input type="text" id="taxes" value="2,500">
+        </div>
+        <div class="inline-input">
+          <label for="insurance">Annual Insurance ($):</label>
+          <input type="text" id="insurance" value="1,200">
+        </div>
+        <div class="inline-input">
+          <label for="hoa">Monthly HOA ($):</label>
+          <input type="text" id="hoa" value="0">
+        </div>
+      </div>
+      <div class="chart">
+        <div id="chart-title">Estimated Total Monthly Payment</div>
+        <div id="total-payment">$0.00</div>
+        <svg id="pieChart" width="300" height="300" viewBox="-2 -2 36 36"></svg>
+        <div class="tooltip" id="tooltip"></div>
+        <div class="breakdown">
+          <div class="output" id="output"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let mode = "FHA"; // or "CONV"
+    let lastPMIRate = 0.44;
+    let lastPMIAmt = 0;
+
+    const $ = id => document.getElementById(id);
+    const format = x => Number(x).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    function parseNum(val) {
+      if (typeof val === 'number') return val;
+      return parseFloat(val.toString().replace(/[^0-9.]/g, '')) || 0;
+    }
+
+    // FHA MIP: 30-year only, Utah Housing rules only
+    function getFhaAnnualMIPRate(baseLoan, ltv) {
+      const maxBase = 726200;
+      const amtTier = baseLoan <= maxBase ? "<=726,200" : ">726,200";
+      let rate = 0, mipText = "";
+      if (amtTier === "<=726,200") {
+        if (ltv <= 95) { rate = 0.0050; mipText = "0.50%"; }
+        else           { rate = 0.0055; mipText = "0.55%"; }
+      } else {
+        if (ltv <= 95) { rate = 0.0070; mipText = "0.70%"; }
+        else           { rate = 0.0075; mipText = "0.75%"; }
+      }
+      return { annualMIPRate: rate, mipText };
+    }
+
+    // PMI for Conventional: always enabled, always editable, LTV always 97%
+    function updatePMIFields({fromAmt, fromRate, fromSlider} = {}) {
+      if (mode !== "CONV") return;
+      const price = parseNum($('purchase-price-text').value);
+      const dpPct = 3.0;
+      const down = Math.round(price * dpPct / 100);
+      const loan = price - down;
+
+      // LTV is always 97, so calculation is always based on that
+      $('pmi-amt-text').removeAttribute('disabled');
+      $('pmi-rate-text').removeAttribute('disabled');
+      $('pmi').removeAttribute('disabled');
+
+      if (fromAmt) {
+        let pmiAmt = parseNum($('pmi-amt-text').value);
+        let pmiRate = loan > 0 ? ((pmiAmt * 12 / loan) * 100) : 0;
+        $('pmi-rate-text').value = pmiRate.toFixed(2);
+        $('pmi').value = Math.max(Math.min(pmiRate, 1.5), 0).toFixed(2);
+        lastPMIRate = pmiRate;
+        lastPMIAmt = pmiAmt;
+      } else if (fromRate) {
+        let pmiRate = parseFloat($('pmi-rate-text').value);
+        let pmiAmt = loan * (pmiRate / 100) / 12;
+        $('pmi-amt-text').value = Math.round(pmiAmt).toLocaleString();
+        $('pmi').value = Math.max(Math.min(pmiRate, 1.5), 0).toFixed(2);
+        lastPMIRate = pmiRate;
+        lastPMIAmt = pmiAmt;
+      } else if (fromSlider) {
+        let pmiRate = parseFloat($('pmi').value);
+        let pmiAmt = loan * (pmiRate / 100) / 12;
+        $('pmi-rate-text').value = pmiRate.toFixed(2);
+        $('pmi-amt-text').value = Math.round(pmiAmt).toLocaleString();
+        lastPMIRate = pmiRate;
+        lastPMIAmt = pmiAmt;
+      } else {
+        let pmiRate = parseFloat($('pmi').value);
+        let pmiAmt = loan * (pmiRate / 100) / 12;
+        $('pmi-rate-text').value = pmiRate.toFixed(2);
+        $('pmi-amt-text').value = Math.round(pmiAmt).toLocaleString();
+        lastPMIRate = pmiRate;
+        lastPMIAmt = pmiAmt;
+      }
+    }
+
+    const tooltip = $('tooltip');
+    const drawPie = (data) => {
+      const total = data.reduce((a, b) => a + b.value, 0);
+      let start = 0;
+      let colors = ['var(--purple)', 'var(--blue)', 'var(--green)', 'var(--red)', 'var(--gray)', '#FF9800'];
+      const svg = $("pieChart");
+      svg.innerHTML = '';
+
+      data.forEach((slice, i) => {
+        const val = slice.value / total;
+        const x1 = 16 + 16 * Math.cos(2 * Math.PI * start);
+        const y1 = 16 + 16 * Math.sin(2 * Math.PI * start);
+        const end = start + val;
+        const x2 = 16 + 16 * Math.cos(2 * Math.PI * end);
+        const y2 = 16 + 16 * Math.sin(2 * Math.PI * end);
+        const largeArc = val > 0.5 ? 1 : 0;
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", `M16,16 L${x1},${y1} A16,16 0 ${largeArc},1 ${x2},${y2} Z`);
+        path.setAttribute("fill", colors[i % colors.length]);
+        path.setAttribute("stroke", "#fff");
+        path.setAttribute("stroke-width", "0.2");
+        path.setAttribute("opacity", "1");
+        path.style.transition = "transform 0.23s cubic-bezier(.4,0,.2,1), filter 0.23s cubic-bezier(.4,0,.2,1)";
+
+        path.addEventListener('mouseenter', (e) => {
+          path.classList.add('pie-slice-hover');
+          tooltip.innerHTML = `
+            <div style="font-size: 1rem; font-weight: 600;">${slice.label}</div>
+            <div style="color: ${colors[i % colors.length]}; font-size: 1.1rem; font-weight: bold;">
+              ${format(slice.value)}
+            </div>
+          `;
+          tooltip.style.display = 'block';
+        });
+
+        path.addEventListener('mousemove', (e) => {
+          const svgRect = svg.getBoundingClientRect();
+          tooltip.style.left = `${e.clientX - svgRect.left + 10}px`;
+          tooltip.style.top = `${e.clientY - svgRect.top + 10}px`;
+        });
+
+        path.addEventListener('mouseleave', () => {
+          path.classList.remove('pie-slice-hover');
+          tooltip.style.display = 'none';
+        });
+
+        svg.appendChild(path);
+        start = end;
+      });
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", "16");
+      circle.setAttribute("cy", "16");
+      circle.setAttribute("r", "8");
+      circle.setAttribute("fill", "var(--backgroundcalc)");
+      svg.appendChild(circle);
+    };
+
+    const update = () => {
+      const price = parseNum($('purchase-price-text').value);
+      const taxes = parseNum($('taxes').value) / 12;
+      const ins = parseNum($('insurance').value) / 12;
+      const hoa = parseNum($('hoa').value);
+      const rate = parseFloat($('interest-rate-text').value) / 100 / 12;
+      const years = 30;
+      const months = 360;
+
+      let outputHTML = "";
+      let pieData = [];
+
+      if (mode === "FHA") {
+        const dpPct = 3.5;
+        const down = Math.round(price * dpPct / 100);
+        const baseLoan = price - down;
+        const ltv = price > 0 ? (baseLoan / price) * 100 : 0;
+
+        const { annualMIPRate, mipText } = getFhaAnnualMIPRate(baseLoan, ltv);
+        const annualMIP = baseLoan * annualMIPRate;
+        const monthlyMIP = annualMIP / 12;
+
+        const ufmipPct = 0.0175;
+        const ufmip = baseLoan * ufmipPct;
+        const totalLoan = baseLoan + ufmip;
+
+        const P = totalLoan;
+        const monthlyPI = rate > 0 ? P * rate / (1 - Math.pow(1 + rate, -months)) : (months > 0 ? P / months : 0);
+
+        let secondLoanAmt = totalLoan * 0.06;
+        if (secondLoanAmt > 27500) secondLoanAmt = 27500;
+
+        let secondRateAnnual = Math.min(parseFloat($('interest-rate-text').value) + 1, 8);
+        let secondRateMonthly = secondRateAnnual / 100 / 12;
+        const secondMonthlyPI = secondRateMonthly > 0 ? secondLoanAmt * secondRateMonthly / (1 - Math.pow(1 + secondRateMonthly, -months)) : (months > 0 ? secondLoanAmt / months : 0);
+
+        const total = monthlyPI + taxes + ins + hoa + monthlyMIP + secondMonthlyPI;
+
+        outputHTML = `
+          <div>P&I (1st): ${format(monthlyPI)}</div>
+          <div>P&I (2nd): ${format(secondMonthlyPI)}</div>
+          <div>Taxes: ${format(taxes)}</div>
+          <div>Insurance: ${format(ins)}</div>
+          <div>MIP: ${format(monthlyMIP)} <span style="font-weight:normal;">(${mipText})</span></div>
+          <div>HOA: ${format(hoa)}</div>
+          <div>1st Mortgage: ${format(totalLoan)}</div>
+          <div>2nd Mortgage: ${format(secondLoanAmt)}</div>
+        `;
+
+        $('total-payment').textContent = format(total);
+
+        pieData = [
+          { label: 'Principal & Interest (1st)', value: monthlyPI },
+          { label: 'Principal & Interest (2nd)', value: secondMonthlyPI },
+          { label: 'Taxes', value: taxes },
+          { label: 'Insurance', value: ins },
+          { label: 'HOA', value: hoa },
+          { label: 'MIP', value: monthlyMIP }
+        ];
+      } else {
+        // CONVENTIONAL, LTV always 97%
+        const dpPct = 3.0;
+        const down = Math.round(price * dpPct / 100);
+        const baseLoan = price - down;
+        let pmi = +parseNum($('pmi-amt-text').value);
+
+        const totalLoan = baseLoan;
+        const P = totalLoan;
+        const monthlyPI = rate > 0 ? P * rate / (1 - Math.pow(1 + rate, -months)) : (months > 0 ? P / months : 0);
+
+        let secondLoanAmt = totalLoan * 0.06;
+        if (secondLoanAmt > 27500) secondLoanAmt = 27500;
+
+        let secondRateAnnual = Math.min(parseFloat($('interest-rate-text').value) + 1, 8);
+        let secondRateMonthly = secondRateAnnual / 100 / 12;
+        const secondMonthlyPI = secondRateMonthly > 0 ? secondLoanAmt * secondRateMonthly / (1 - Math.pow(1 + secondRateMonthly, -months)) : (months > 0 ? secondLoanAmt / months : 0);
+
+        const total = monthlyPI + taxes + ins + hoa + pmi + secondMonthlyPI;
+
+        outputHTML = `
+          <div>P&I (1st): ${format(monthlyPI)}</div>
+          <div>P&I (2nd): ${format(secondMonthlyPI)}</div>
+          <div>Taxes: ${format(taxes)}</div>
+          <div>Insurance: ${format(ins)}</div>
+          <div>PMI: ${format(pmi)}</div>
+          <div>HOA: ${format(hoa)}</div>
+          <div>1st Mortgage: ${format(totalLoan)}</div>
+          <div>2nd Mortgage: ${format(secondLoanAmt)}</div>
+        `;
+        $('total-payment').textContent = format(total);
+
+        pieData = [
+          { label: 'Principal & Interest (1st)', value: monthlyPI },
+          { label: 'Principal & Interest (2nd)', value: secondMonthlyPI },
+          { label: 'Taxes', value: taxes },
+          { label: 'Insurance', value: ins },
+          { label: 'HOA', value: hoa },
+          { label: 'PMI', value: pmi }
+        ];
+      }
+
+      $('output').innerHTML = outputHTML;
+      drawPie(pieData);
+    };
+
+    function formatCurrencyInput(e) {
+      const input = e.target;
+      const prevValue = input.value;
+      const prevPos = input.selectionStart;
+
+      let raw = prevValue.replace(/[^0-9.]/g, '');
+      let formatted = '';
+      if (raw) {
+        let parts = raw.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        formatted = parts.join('.');
+      }
+      input.value = formatted;
+      let newPos = prevPos + (formatted.length - prevValue.length);
+      input.setSelectionRange(newPos, newPos);
+      return raw;
+    }
+
+    $('fha-toggle').addEventListener('click', () => {
+      mode = "FHA";
+      $('fha-toggle').classList.add('active');
+      $('conv-toggle').classList.remove('active');
+      $('pmi-controls').style.display = "none";
+      $('pmi').style.display = "none";
+      update();
+    });
+    $('conv-toggle').addEventListener('click', () => {
+      mode = "CONV";
+      $('conv-toggle').classList.add('active');
+      $('fha-toggle').classList.remove('active');
+      $('pmi-controls').style.display = "";
+      $('pmi').style.display = "";
+      updatePMIFields();
+      update();
+    });
+
+    $('purchase-price-text').addEventListener('input', (e) => {
+      formatCurrencyInput(e);
+      syncPurchasePriceToSlider();
+      updatePMIFields();
+      update();
+    });
+    $('purchase-price').addEventListener('input', () => {
+      syncPurchasePriceToText();
+      updatePMIFields();
+      update();
+    });
+
+    $('pmi').addEventListener('input', () => {
+      updatePMIFields({fromSlider: true});
+      update();
+    });
+    $('pmi-amt-text').addEventListener('input', (e) => {
+      formatCurrencyInput(e);
+      updatePMIFields({fromAmt: true});
+      update();
+    });
+    $('pmi-rate-text').addEventListener('input', () => {
+      updatePMIFields({fromRate: true});
+      update();
+    });
+
+    $('interest-rate').addEventListener('input', () => {
+      syncInterestRateToText();
+      updatePMIFields();
+      update();
+    });
+    $('interest-rate-text').addEventListener('input', () => {
+      syncInterestRateToSlider();
+      updatePMIFields();
+      update();
+    });
+
+    ['taxes', 'insurance', 'hoa'].forEach(id => {
+      $(id).addEventListener('input', (e) => {
+        formatCurrencyInput(e);
+        update();
+      });
+    });
+
+    function syncPurchasePriceToSlider() {
+      let val = parseNum($('purchase-price-text').value);
+      $('purchase-price').value = Math.max(Math.min(val, Number($('purchase-price').max)), Number($('purchase-price').min));
+    }
+    function syncPurchasePriceToText() {
+      $('purchase-price-text').value = Number($('purchase-price').value).toLocaleString();
+    }
+    function syncInterestRateToSlider() {
+      let val = parseFloat($('interest-rate-text').value);
+      $('interest-rate').value = Math.max(Math.min(val, Number($('interest-rate').max)), Number($('interest-rate').min));
+    }
+    function syncInterestRateToText() {
+      $('interest-rate-text').value = +$('interest-rate').value;
+    }
+
+    // Initial sync & update
+    syncPurchasePriceToSlider();
+    syncInterestRateToSlider();
+    update();
+  </script>
+</body>
+</html>
