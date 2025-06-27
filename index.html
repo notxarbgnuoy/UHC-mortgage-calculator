@@ -495,7 +495,7 @@
     const drawPie = (data) => {
       const total = data.reduce((a, b) => a + b.value, 0);
       let start = 0;
-      let colors = ['var(--purple)', 'var(--blue)', 'var(--green)', 'var(--red)', 'var(--gray)', '#FF9800'];
+      let colors = ['var(--purple)', 'var(--blue)', 'var(--green)', '#FF9800', 'var(--gray)', 'var(--red)'];
       const svg = $("pieChart");
       svg.innerHTML = '';
 
